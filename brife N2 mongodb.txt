@@ -1,0 +1,133 @@
+
+
+  	<<----------------------------------------- Brife Niveux 2 MongoDB Commande ----------------------------------------->>
+
+
+
+	1/ Créer une base de données.
+
+	>>> use movies
+
+	1/ créer une variable.
+
+	>>> m= db.movies
+
+	2/ Importer le fichier json ci-joint dans votre base de données.
+
+	>>> mongoimport -d ifdb -c films --jsonArray --file C:\Users\Youcode\Desktop\movies.json --headerline 
+
+	3/ Afficher les films de l’année 2010
+
+	>>> m.find({"year":{$gt:2010}}).pretty();
+
+	3/ Combien de film a été réalisé en 2009.
+
+	>>> m.find({"year":{$gt:2009}}).count(); 
+
+	4/ Faites une requête pour récupérer des documents des films réalisés en 2008 en excluant les champs :_id, cast, genres.
+
+	>>> m.find({year:2008},{_id:1,cast:1,genres:1})
+
+	5/ Afficher tous les films commençant par la lettre A.
+
+	>>> m.find({ "title": { $regex: /^A/ } })
+
+	6/ Afficher les films où ‘Timothy Gibbs’ a joué en 2011
+	
+	>>> m.find({cast:"Timothy Gibbs",year:2011}).pretty()
+
+	7/ Afficher les films de type ‘Thriller’ en 2011
+
+	>>> m.find({genres:"Thriller",year:2011}).pretty()
+
+	8/ Afficher les films de type ‘Thriller’ réalisés en 2016 par ordre alphabétique inverse de leurs ‘title’
+
+	>>> m.find({genres:"Thriller",year:2016}).sort({title:-1}).pretty()
+
+	9/ Insérer deux film de votre choix dans la base en utilisant un BulkWrite ( pour le champs ‘year’, il doit être 2020)
+
+	>>> 	db.movies.bulkWrite(
+      [
+         { insertOne :
+            {
+               "document" :
+               {
+                  "title" : "batman", "year" : 2020, "genres" : "action"
+               }
+            }
+         },
+         { insertOne :
+            {
+               "document" :
+               {
+                  "title" : "faste", "year" : 2020, "genres" : "action"
+               }
+            }
+         }
+      ]
+   );
+
+
+
+	10/ Supprimer tous les films réalisés avant 2000
+
+	>>> m.deleteMany({year:{$lt:2000}})
+
+	11/ Ajouter un champs rating qui sera de type array d’objets pour tous les documents
+
+	>>> m.update({},{$set: {"rating":[]}},false,true)
+
+	12/ Faites vous et un collaborateur, les ratings (le rating est sur 5) de deux films de votre choix, comme suit : ratings: [ { by: "moi", rating: 4 }, {by:"collaborateur”, rating: 5} ]
+
+	>>> db.movies.update({ title: "102 dalmatians" },{$push: {rating:{ $each: [ { by: "said", rating: 4 }, { by: "salim", rating: 5 }]}}})
+
+	13/ Créer un champ qui sera la moyenne de tous les ratings est appelé le : ar
+
+	>>> m.update({},{$set: {"ar":""}},false,true)
+
+	14/ Renommer le champ créer précédémment à savoir : ar, pour devenir averageRating.
+
+	>>>  m.updateMany( {}, { $rename: { "av": "averageRating" } } )
+
+	15/ Créer un champs views qui sera un array qui contiendra des valeurs comme ci-après : ‘views ‘:[123444, 66855,78966]
+
+	>>> m.update({},{$set: {"views":[]}},false,true)
+
+	16/ Faites une mise à jour des films que vous avez insérer en renseignant les valeurs pour le tableau views.
+
+	>>> m..update({ "title": "faste" },{$push: {"views": {$each: [ 123444, 66855, 78966]}}});
+
+	>>> m..update({ "title": "MovieOne" },{$push: {"views": {$each: [ 120000, 60000, 78000]}}});
+
+	17/ Créer un champs totalViews qui sera la somme du tableau view
+	
+	>>> m.aggregate( [{
+             $group : {
+                 _id : '$title',
+                 totalViews : {$sum : '$views'}    //sums the amount
+  	           }
+  	       }
+ 	    ] 
+ 	)
+
+	
+
+	18/ Créer un champs budget pour tous les documents et initialiser sa valeur à -1
+
+	>>> m.update({},{$set:{"budget":-1}},false,true)
+
+	19/ Modifier les valeurs budget pour les films que vous avez ajouté.
+
+	>>> m.aggregate([{$group:{ _id: "$title",ar: { $avg: "$rating" }}}])
+	
+	20/ Faites la mise à jour des films que vous avez ajouté précédemment.
+	
+	>>> m.update({title : "batman"}, {$set:{ budget: 10}})
+
+	>>> m.update({title : "faste"}, {$set:{ budget: 10}})
+
+	21/ Faites un back up de votre base de données.
+
+	>>> quit()
+
+	mongodump
